@@ -1,26 +1,50 @@
-import React from 'react';
-import logo from './logo.svg';
+/*global chrome*/
+import React, { Component } from 'react';
+import "bootstrap/dist/css/bootstrap.min.css";
 import './App.css';
+import Nav from "./components/nav";
+import Body from "./components/body";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends Component {
+  constructor() {
+    super();
+    this.state = {
+      savedTabs : {
+        readLater: [],
+        bookmark: [],
+        customized: {},
+      },
+    };
+    this.handleClickTab = this.handleClickTab.bind(this);
+  }
+
+  componentDidMount() {
+    console.log("app mounted");
+    chrome.runtime.sendMessage(
+      {type: 'requestSavedTabs'}, 
+      (response) => {
+        console.log(response);
+        if (response) {
+          this.setState({
+            savedTabs: response
+          });
+        }
+      }
+    );
+  }
+
+  handleClickTab(tab) {
+    chrome.tabs.create({'url': tab.url});
+  }
+
+  render() {
+    return (
+      <>
+        <Nav />
+        <Body savedTabs={this.state.savedTabs} handleClickTab={this.handleClickTab}/>
+      </>
+    );
+  }
 }
 
 export default App;
