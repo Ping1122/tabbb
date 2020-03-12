@@ -9,11 +9,14 @@ class Body extends Component {
 		chrome.extension.getBackgroundPage().console.log(this.props.savedTabs)
 	    return this.props.savedTabs.readLater.map(tab => {
 	        return (
-		        <SavedTab 
-		        	key={tab.id} 
-		        	savedTab={tab} 
-		        	handleClickTab={this.props.handleClickTab}
-		        />
+	        	<li class="list-group-item">
+			        <SavedTab 
+			        	key={tab.id} 
+			        	savedTab={tab} 
+			        	handleClickTab={this.props.handleClickTab}
+			        	handleTabClose={this.props.handleTabClose}
+			        />
+		        </li>
 		    );
 	    });
 	}

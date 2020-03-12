@@ -8,13 +8,22 @@ class SavedTab extends Component {
 	    	title = `${title.substring(0, 47)}...`
 	    }
 	    return (
-	     	<button 
-	     		type="button" 
-	     		className="list-group-item list-group-item-action" 
-	     		onClick={() => this.props.handleClickTab(this.props.savedTab)}
-	     	>
-	     		{title}
-	     	</button>
+	    	<div className="row">
+		    	<div className="col-10">
+			     	<button 
+			     		type="button" 
+			     		className="list-group-item list-group-item-action" 
+			     		onClick={() => this.props.handleClickTab(this.props.savedTab)}
+			     	>
+			     		{title}
+			     	</button>
+			     </div>
+			     <div className="col-2">
+			     	<button type="button" className="close" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+			     </div>
+			</div>
 	    );
 	}
 }

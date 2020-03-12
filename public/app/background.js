@@ -45,6 +45,12 @@ let saveToReadLaterAndCloseCurrentTab = (e) => {
   closeCurrentTab();
 }
 
+let handleRemoveTab = (info) => {
+	let target = savedTabs[info.category];
+	if (info.customizedCategory) target = target[customizedCategory];
+	target.splice(info.index, 1);
+}
+
 chrome.contextMenus.create({
   "title": "Save to read later and close current tab",
   "contexts": ["page", "selection", "image", "link"]
@@ -57,6 +63,9 @@ chrome.runtime.onMessage.addListener((msg, sender, response) => {
         case 'requestSavedTabs':
             response(savedTabs);
             break;
+        case 'removeTab':
+        	handleRemoveTab(msg.message);
+        	break;
         default:
             response('unknown request');
             break;
