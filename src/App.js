@@ -9,50 +9,85 @@ class App extends Component {
   constructor() {
     super();
     this.state = {
+      category : "readLater",
+      customizedCategory : "",
       savedTabs : {
         readLater: [],
         bookmark: [],
         customized: {},
       },
     };
+    this.selectNavTab = this.selectNavTab.bind(this);
+    this.getCurrentCategory = this.getCurrentCategory.bind(this);
     this.handleClickTab = this.handleClickTab.bind(this);
     this.handleTabClose = this.handleTabClose.bind(this);
+    this.handleOpenAll = this.handleOpenAll.bind(this);
     this.removeTabByReference = this.removeTabByReference.bind(this);
+    this.removeReadLater = this.removeReadLater.bind(this);
   }
 
   componentDidMount() {
-    console.log("app mounted");
     chrome.runtime.sendMessage(
       {type: 'requestSavedTabs'}, 
       (response) => {
-        console.log(response);
         if (response) {
           this.setState({
             savedTabs: response
           });
+          chrome.extension.getBackgroundPage().console.log("app componentDidMount");
+          chrome.extension.getBackgroundPage().console.log(response);
         }
       }
     );
   }
 
+  selectNavTab(category) {
+    if (category !== this.state.category) {
+      this.setState({category});
+    }
+  }
+
+  getCurrentCategory() {
+    let target = this.state.savedTabs[this.state.category];
+    if (this.state.customizedCategory) {
+      target = target[this.state.customizedCategory];
+    }
+    return target;
+  }
+
   handleClickTab(tab) {
     chrome.tabs.create({'url': tab.url});
-    if (this.state.savedTabs.readLater.includes(tab)) {
-      this.removeTabByReference(tab, "readLater");
+    if (this.state.category === "readLater") {
+      this.removeTabByReference(tab);
     }
   }
 
   handleTabClose(tab) {
-    if (this.removeTabByReference(tab.id, "readLater")) return;
-    if (this.removeTabByReference(tab.id, "bookmark")) return;
-    for (let field in this.state.savedTabs.customized) {
-      if (this.removeTabByReference(tab.id, "customized", field)) return;
+    this.removeTabByReference(tab);
+  }
+
+  handleOpenAll(tabList) {
+    tabList.forEach(tab => {
+      chrome.tabs.create({'url': tab.url});
+    });
+    if (this.state.category === "readLater") {
+      this.removeReadLater();
     }
   }
 
-  removeTabByReference(tab, category, customizedCategory=null) {
-    let tabList = this.state.savedTabs[category];
-    if (customizedCategory) tabList = tabList[customizedCategory];
+  removeReadLater() {
+    let savedTabs = {...this.state.savedTabs};
+    savedTabs.readLater = [];
+    this.setState({savedTabs});
+    chrome.runtime.sendMessage(
+      {type:"removeReadLater"}, 
+      (response) => {console.log(response);}
+    );
+  }
+
+  removeTabByReference(tab) {
+    const {category, customizedCategory} = this.state;
+    let tabList = this.getCurrentCategory();
     const index = tabList.indexOf(tab);
     if (index === -1) {
       return false;
@@ -70,7 +105,11 @@ class App extends Component {
     chrome.runtime.sendMessage(
       {
         type: 'removeTab',
-        message: {category, customizedCategory, index}
+        message: {
+          category, 
+          customizedCategory, 
+          index
+        }
       }, 
       (response) => {console.log(response);}
     );
@@ -80,8 +119,16 @@ class App extends Component {
   render() {
     return (
       <div className="popupContainer">
-        <Nav />
-        <Body savedTabs={this.state.savedTabs} handleClickTab={this.handleClickTab}/>
+        <Nav 
+          category={this.state.category} 
+          selectNavTab={this.selectNavTab}
+        />
+        <Body 
+          tabList={this.getCurrentCategory()} 
+          handleClickTab={this.handleClickTab}
+          handleTabClose={this.handleTabClose}
+          handleOpenAll={this.handleOpenAll}
+        />
       </div>
     );
   }

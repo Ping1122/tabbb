@@ -19,7 +19,12 @@ class SavedTab extends Component {
 			     	</button>
 			     </div>
 			     <div className="col-2">
-			     	<button type="button" className="close" aria-label="Close">
+			     	<button 
+			     		type="button" 
+			     		className="close" 
+			     		aria-label="Close"
+			     		onClick={() => this.props.handleTabClose(this.props.savedTab)}
+			     	>
 						<span aria-hidden="true">&times;</span>
 					</button>
 			     </div>

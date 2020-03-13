@@ -31,8 +31,11 @@ let saveCurrentTab = (category, customizedCategory=null) => {
 			title: currentTab.title,
 			favicon : favicon,
 		});
+		console.log(savedTabs);
 	});
 }
+
+let saveCurrentWindow = () => {}
 
 let closeCurrentTab = () => {
 	chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
@@ -40,9 +43,31 @@ let closeCurrentTab = () => {
 	});
 }
 
-let saveToReadLaterAndCloseCurrentTab = (e) => {
-  saveCurrentTab("readLater");
-  closeCurrentTab();
+let closeCurrentWindow = () => {}
+
+let saveAndCloseTab = (e) => {
+  console.log("saveToReadLaterAndCloseCurrentTab");
+  console.log(e);
+  const id = e.menuItemId;
+  switch (id) {
+  	case 1:
+  	  saveCurrentTab("readLater");
+      closeCurrentTab();
+ 	  break;
+  	case 2:
+  	  saveCurrentTab("bookmark");
+      closeCurrentTab();
+	  break;
+	case 3:
+	  saveCurrentWindow("readLater");
+	  closeCurrentWindow();
+	  break;
+	case 4:
+	  saveCurrentWindow("bookmark");
+	  closeCurrentWindow();
+  	default:
+  	  break;
+  }
 }
 
 let handleRemoveTab = (info) => {
@@ -51,12 +76,31 @@ let handleRemoveTab = (info) => {
 	target.splice(info.index, 1);
 }
 
+let handleRemoveReadLater = () => {
+	savedTabs.readLater = [];
+}
+
 chrome.contextMenus.create({
-  "title": "Save to read later and close current tab",
+  "title": "Save To Read Later                 ALT+Q",
   "contexts": ["page", "selection", "image", "link"]
 });
 
-chrome.contextMenus.onClicked.addListener(saveToReadLaterAndCloseCurrentTab);
+chrome.contextMenus.create({
+  "title": "Save To Bookmark                  ALT+W",
+  "contexts": ["page", "selection", "image", "link"]
+});
+
+chrome.contextMenus.create({
+  "title": "Save Window To Read Later    ALT+SHIFT+Q",
+  "contexts": ["page", "selection", "image", "link"]
+});
+
+chrome.contextMenus.create({
+  "title": "Save Window To Bookmark     ALT+SHIFT+W",
+  "contexts": ["page", "selection", "image", "link"]
+});
+
+chrome.contextMenus.onClicked.addListener(saveAndCloseTab);
 
 chrome.runtime.onMessage.addListener((msg, sender, response) => {
     switch (msg.type) {
@@ -66,8 +110,34 @@ chrome.runtime.onMessage.addListener((msg, sender, response) => {
         case 'removeTab':
         	handleRemoveTab(msg.message);
         	break;
+        case "removeReadLater":
+        	handleRemoveReadLater();
+        	break;
         default:
             response('unknown request');
             break;
     }
 })
+
+chrome.commands.onCommand.addListener(function(command) {
+  switch (command) {
+  	case "saveToReadLater":
+  	  saveCurrentTab("readLater");
+      closeCurrentTab();
+  	  break;
+  	case "saveToBookmark":
+  	  saveCurrentTab("bookmark");
+  	  closeCurrentTab();
+	  break;
+	case "saveAllTabsToReadLater":
+  	  saveCurrentWindow("readLater");
+      closeCurrentWindow();
+  	  break;
+  	case "saveAllTabsToBookmark":
+  	  saveCurrentWindow("bookmark");
+  	  closeCurrentWindow();
+	  break;
+  	default:
+  	  break;
+  }
+});
